@@ -1,0 +1,58 @@
+@model CourseDetailViewModel
+@{
+    ViewData["Title"] = "Chi tiết khóa học";
+    var course = Model.Course;
+    var thumbnail = course.Images.FirstOrDefault(image => image.IsThumbnail);
+}
+<a asp-action="Index" class="text-decoration-none">← Danh sách khóa học</a>
+<div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mt-3 mb-4">
+    <div><h1 class="h3 mb-2">@course.Name</h1><span class="badge text-bg-primary">@course.CourseCategory?.Name</span>
+        <span class="badge @(course.IsActive ? "text-bg-success" : "text-bg-secondary")">@(course.IsActive ? "Đang tuyển sinh" : "Ngừng tuyển sinh")</span></div>
+    <div class="d-flex gap-2"><a asp-action="Edit" asp-route-id="@course.Id" class="btn btn-outline-primary">Sửa thông tin</a>
+        <form asp-action="Delete" asp-route-id="@course.Id" method="post" onsubmit="return confirm('Bạn chắc chắn muốn xóa khóa học này?')"><button class="btn btn-outline-danger">Xóa khóa học</button></form></div>
+</div>
+<div class="row g-4">
+    <section class="col-lg-7"><div class="card card-body h-100"><h2 class="h5">Thông tin khóa học</h2><dl class="row mb-0">
+        <dt class="col-sm-4">Học phí</dt><dd class="col-sm-8">@course.TuitionFee.ToString("N0") ₫</dd>
+        <dt class="col-sm-4">Thời lượng</dt><dd class="col-sm-8">@course.Duration giờ — @course.DurationLabel</dd>
+        <dt class="col-sm-4">Mô tả</dt><dd class="col-sm-8">@(string.IsNullOrWhiteSpace(course.Description) ? "Chưa có mô tả." : course.Description)</dd>
+    </dl></div></section>
+    <section class="col-lg-5"><div class="card card-body"><h2 class="h5">Thêm ảnh</h2><p class="small text-secondary">Nhập URL ảnh công khai. Ảnh đầu tiên tự được đặt làm ảnh đại diện.</p>
+        <form asp-action="AddImage" asp-route-id="@course.Id" method="post"><label asp-for="ImageUrl" class="form-label"></label><input asp-for="ImageUrl" class="form-control" placeholder="https://example.com/image.jpg" />
+            <span asp-validation-for="ImageUrl" class="text-danger"></span><button class="btn btn-primary mt-3">Thêm ảnh</button></form>
+    </div></section>
+</div>
+<section class="mt-4" aria-label="Ảnh đại diện hiện tại">
+    <div class="card card-body">
+        <h2 class="h5 mb-3">Ảnh đại diện hiện tại</h2>
+        @if (thumbnail is not null)
+        {
+            <div class="d-flex align-items-center gap-3 flex-wrap">
+                <img class="course-featured-image" src="@thumbnail.ImageUrl" alt="Ảnh đại diện khóa học @course.Name" onerror="this.onerror=null;this.src='https://placehold.co/480x270?text=Image+not+available'" />
+                <div><span class="badge text-bg-success">Đang được chọn</span><div class="small text-secondary mt-2">Ảnh này được hiển thị trong danh sách khóa học.</div></div>
+            </div>
+        }
+        else
+        {
+            <div class="alert alert-warning mb-0">Khóa học chưa có ảnh đại diện. Thêm ảnh rồi chọn “Chọn làm đại diện”.</div>
+        }
+    </div>
+</section>
+<section class="mt-5"><div class="d-flex justify-content-between align-items-center mb-3"><h2 class="h4 mb-0">Thư viện ảnh</h2><span class="text-secondary">@course.Images.Count ảnh</span></div>
+    @if (course.Images.Count == 0) { <div class="alert alert-warning">Khóa học chưa có ảnh. Hãy thêm URL ảnh ở phía trên.</div> }
+    else
+    {
+        <div class="row g-3">
+        @foreach (var image in course.Images)
+        {
+            <div class="col-md-6 col-lg-4"><div class="card h-100"><img class="card-img-top course-image" src="@image.ImageUrl" alt="@course.Name" onerror="this.onerror=null;this.src='https://placehold.co/800x450?text=Image+not+available'" />
+                <div class="card-body d-flex justify-content-between align-items-center gap-2">
+                    @if (image.IsThumbnail) { <span class="badge text-bg-success">Ảnh đại diện</span> }
+                    else { <form asp-action="ChooseThumbnail" asp-route-id="@course.Id" asp-route-imageId="@image.Id" method="post"><button class="btn btn-sm btn-outline-primary">Chọn làm đại diện</button></form> }
+                    <form asp-action="DeleteImage" asp-route-id="@course.Id" asp-route-imageId="@image.Id" method="post" onsubmit="return confirm('Xóa ảnh này?')"><button class="btn btn-sm btn-outline-danger">Xóa ảnh</button></form>
+                </div></div></div>
+        }
+        </div>
+    }
+</section>
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

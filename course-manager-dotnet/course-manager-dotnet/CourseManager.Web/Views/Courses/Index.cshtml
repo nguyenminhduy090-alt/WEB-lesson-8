@@ -1,0 +1,67 @@
+@model CourseListViewModel
+@{
+    ViewData["Title"] = "Quản lý khóa học";
+}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <div><h1 class="h3 mb-1">Quản lý khóa học</h1><div class="text-secondary">Tìm kiếm, lọc và quản lý các khóa học</div></div>
+    <a class="btn btn-primary" asp-action="Create">+ Thêm khóa học</a>
+</div>
+<form method="get" asp-action="Index" class="card card-body mb-4">
+    <div class="row g-3 align-items-end">
+        <div class="col-lg-3 col-md-6"><label class="form-label" for="search">Tên khóa học</label><input class="form-control" id="search" name="search" value="@Model.Search" placeholder="Nhập một phần tên..." /></div>
+        <div class="col-lg-2 col-md-6"><label class="form-label" for="categoryId">Loại khóa học</label>
+            <select class="form-select" id="categoryId" name="categoryId"><option value="">Tất cả</option>
+                @foreach (var category in Model.Categories) { <option value="@category.Id" selected="@(Model.CategoryId == category.Id)">@category.Name</option> }
+            </select></div>
+        <div class="col-lg-2 col-md-6"><label class="form-label" for="active">Trạng thái</label><select class="form-select" id="active" name="active">
+            <option value="">Tất cả</option><option value="true" selected="@(Model.Active == true)">Đang tuyển sinh</option><option value="false" selected="@(Model.Active == false)">Ngừng tuyển sinh</option>
+        </select></div>
+        <div class="col-lg-1 col-md-6"><label class="form-label" for="minFee">Phí từ</label><input class="form-control" type="number" min="0" step="1000" id="minFee" name="minFee" value="@Model.MinFee" /></div>
+        <div class="col-lg-1 col-md-6"><label class="form-label" for="maxFee">Đến</label><input class="form-control" type="number" min="0" step="1000" id="maxFee" name="maxFee" value="@Model.MaxFee" /></div>
+        <div class="col-lg-2 col-md-6"><label class="form-label" for="sort">Sắp xếp</label><select class="form-select" name="sort" id="sort">
+            <option value="">Mới cập nhật</option><option value="feeAsc" selected="@(Model.Sort == "feeAsc")">Học phí tăng dần</option>
+            <option value="feeDesc" selected="@(Model.Sort == "feeDesc")">Học phí giảm dần</option><option value="durationAsc" selected="@(Model.Sort == "durationAsc")">Thời lượng tăng dần</option>
+        </select></div>
+        <div class="col-lg-1 col-md-6 d-grid"><button type="submit" class="btn btn-dark">Lọc</button></div>
+    </div>
+    <div class="mt-2"><a asp-action="Index" class="small">Xóa bộ lọc</a></div>
+</form>
+@if (!string.IsNullOrWhiteSpace(Model.ErrorMessage)) { <div class="alert alert-danger">@Model.ErrorMessage</div> }
+@if (Model.Courses.Count == 0)
+{
+    <div class="alert alert-info">Không tìm thấy khóa học phù hợp. Hãy đổi từ khóa hoặc bộ lọc.</div>
+}
+else
+{
+    <div class="table-responsive"><table class="table table-hover align-middle bg-white">
+        <thead class="table-light"><tr><th>ID</th><th>Ảnh đại diện</th><th>Tên khóa học</th><th>Loại</th><th>Học phí</th><th>Thời lượng</th><th>Phân loại</th><th>Trạng thái</th><th></th></tr></thead>
+        <tbody>
+        @foreach (var course in Model.Courses)
+        {
+            var thumbnail = course.Images.FirstOrDefault(image => image.IsThumbnail);
+            <tr><td>@course.Id</td><td>
+                    @if (thumbnail is not null)
+                    {
+                        <img class="course-list-thumbnail" src="@thumbnail.ImageUrl" alt="Ảnh đại diện @course.Name" onerror="this.onerror=null;this.src='https://placehold.co/120x80?text=No+image'" />
+                    }
+                    else
+                    {
+                        <span class="small text-secondary">Chưa có ảnh</span>
+                    }
+                </td><td class="fw-semibold">@course.Name</td><td>@course.CourseCategory?.Name</td>
+                <td>@course.TuitionFee.ToString("N0") ₫</td><td>@course.Duration giờ</td><td><span class="badge text-bg-info">@course.DurationLabel</span></td>
+                <td><span class="badge @(course.IsActive ? "text-bg-success" : "text-bg-secondary")">@(course.IsActive ? "Đang tuyển sinh" : "Ngừng tuyển sinh")</span></td>
+                <td class="text-nowrap"><a class="btn btn-sm btn-outline-primary" asp-action="Details" asp-route-id="@course.Id">Chi tiết</a>
+                    <a class="btn btn-sm btn-outline-secondary" asp-action="Edit" asp-route-id="@course.Id">Sửa</a></td></tr>
+        }
+        </tbody></table></div>
+    @if (Model.TotalPages > 1)
+    {
+        <nav><ul class="pagination">
+            <li class="page-item @(Model.Page == 0 ? "disabled" : "")"><a class="page-link" asp-route-page="@(Model.Page - 1)" asp-route-search="@Model.Search" asp-route-categoryId="@Model.CategoryId" asp-route-active="@Model.Active" asp-route-minFee="@Model.MinFee" asp-route-maxFee="@Model.MaxFee" asp-route-sort="@Model.Sort">Trước</a></li>
+            <li class="page-item disabled"><span class="page-link">@(Model.Page + 1) / @Model.TotalPages</span></li>
+            <li class="page-item @(Model.Page >= Model.TotalPages - 1 ? "disabled" : "")"><a class="page-link" asp-route-page="@(Model.Page + 1)" asp-route-search="@Model.Search" asp-route-categoryId="@Model.CategoryId" asp-route-active="@Model.Active" asp-route-minFee="@Model.MinFee" asp-route-maxFee="@Model.MaxFee" asp-route-sort="@Model.Sort">Sau</a></li>
+        </ul></nav>
+    }
+    <p class="small text-secondary">Tổng số: @Model.TotalItems khóa học</p>
+}

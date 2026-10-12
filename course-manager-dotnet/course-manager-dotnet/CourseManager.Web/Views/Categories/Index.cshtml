@@ -1,0 +1,18 @@
+@model CategoryListViewModel
+@{
+    ViewData["Title"] = "Loại khóa học";
+}
+<div class="d-flex justify-content-between align-items-center mb-4"><div><h1 class="h3">Loại khóa học</h1><p class="text-secondary mb-0">Loại đang được khóa học sử dụng không thể xóa.</p></div><a asp-action="Create" class="btn btn-primary">+ Thêm loại</a></div>
+@if (Model.Categories.Count == 0) { <div class="alert alert-info">Chưa có loại khóa học.</div> }
+else
+{
+    <div class="table-responsive"><table class="table table-hover bg-white"><thead class="table-light"><tr><th>ID</th><th>Tên loại</th><th>Mô tả</th><th>Số khóa học</th><th></th></tr></thead><tbody>
+    @foreach (var category in Model.Categories)
+    {
+        <tr><td>@category.Id</td><td class="fw-semibold">@category.Name</td><td>@category.Description</td><td>@category.CourseCount</td><td class="text-nowrap">
+            <a asp-action="Edit" asp-route-id="@category.Id" class="btn btn-sm btn-outline-secondary">Sửa</a>
+            <form class="d-inline" asp-action="Delete" asp-route-id="@category.Id" method="post" onsubmit="return confirm('Xóa loại khóa học này?')"><button class="btn btn-sm btn-outline-danger">Xóa</button></form>
+        </td></tr>
+    }
+    </tbody></table></div>
+}

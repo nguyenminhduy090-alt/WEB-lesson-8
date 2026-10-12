@@ -1,0 +1,6 @@
+@model string
+@{
+    ViewData["Title"] = "Không thể thực hiện yêu cầu";
+}
+<div class="alert alert-warning"><h1 class="h4">Không thể thực hiện yêu cầu</h1><p class="mb-0">@Model</p></div>
+<a asp-controller="Courses" asp-action="Index" class="btn btn-primary">Về danh sách khóa học</a>
